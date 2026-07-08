@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const catchAsync = require('../utils/catchAsync');
 
 // name, email, photo, password, password confirm
 
@@ -90,7 +91,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
 
-  // This is for encrypting the reset token as a securoty measure
+  // This is for encrypting the reset token as a security measure
   this.passwordResetToken = crypto
     .createHash('sha256')
     .update(resetToken)

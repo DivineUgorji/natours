@@ -9,8 +9,8 @@ const tourSchema = new mongoose.Schema(
       required: [true, 'A tour must have a name'],
       unique: true,
       trim: true,
-      maxlength: [40, 'A tour name must have less or equal than 40 characters'],
-      minlength: [10, 'A tour name must have more or equal than 10 characters'],
+      maxlength: [40, 'A tour name must have less or equal to 40 characters'],
+      minlength: [10, 'A tour name must have more or equal to 10 characters'],
       // validate: [validator.isAlpha, 'Tour name must only contain charaters'],
     },
     slug: String,
@@ -80,7 +80,7 @@ const tourSchema = new mongoose.Schema(
 /**
  * Virtual properties are fields we can define
  * in our schema that won't be persisted (stored in the Db).
- *These are fields that can be derived from one another
+ * These are fields that can be derived from one another
  and it makes no sense to save them to the database.
  e.g conversion of distance from miles to kilometers.
 
@@ -100,7 +100,7 @@ tourSchema.virtual('durationWeeks').get(function () {
  * We can always define a function to run before or after saving an event in the database.
  *
  * There are four kinds of middlewares in Mongoose which are:
- * -Doument
+ * -Document
  * -Query
  * -Aggregate and
  * -Model middlewares

@@ -12,6 +12,18 @@ const signToken = (id) => {
   });
 };
 
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user: user,
+    },
+  });
+};
+
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -22,15 +34,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     role: req.body.role,
   });
 
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser,
-    },
-  });
+  createSendToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -42,22 +46,17 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!email || !password) {
     return next(new AppError('Please provide email and password', 400));
   }
-  // 2) check if user exists and paswword correct
+  // 2) check if user email and password exists in the db
   const user = await User.findOne({ email }).select('+password');
   // const correct = ;
 
-  // 3) if everything is okay, send token to client
+  // 3) Compare if the provided password and the saved one match,
+  // then, if everything is okay, sign token and send to client
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password', 401));
   }
 
-  console.log('User:', user);
-
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
 });
 
 /**This is a middleware function to protect the get allTours
@@ -161,6 +160,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     );
   }
 });
+
 exports.resetPassword = catchAsync(async (req, res, next) => {
   console.log(req.params.token);
 
@@ -170,6 +170,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     .update(req.params.token)
     .digest('hex');
   console.log(hashedToken);
+
   const user = await User.findOne({
     passwordResetToken: hashedToken,
     passwordResetExpiresAt: { $gt: Date.now() },
@@ -185,10 +186,24 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await user.save();
   // 3). Update changedPasswordAt property for the user
   // 4). Login the user, send JWT
-  const token = signToken(user._id);
+  createSendToken(user, 200, res);
+});
 
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+// Implement password update for logged-in users
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // 1) Get the user from the collection
+  const user = await User.findById(req.user.id).select('+password');
+
+  // 2) Check if the posted password is correct
+  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+    return next(new AppError('Your current password is not correct', 401));
+  }
+
+  // 3) If the password is correct, update the password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+
+  // 4) Log user in, send JWT
+  createSendToken(user, 200, res);
 });
