@@ -14,24 +14,6 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
-exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await User.find();
-
-  // 3. Send response
-  res.status(200).json({
-    status: 'success',
-    results: users.length,
-    data: {
-      users,
-    },
-  });
-
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined',
-  });
-});
-
 exports.updateMe = catchAsync(async (req, res, next) => {
   //1). Create an error if user posts password data
   if (req.body.password || req.body.passwordConfirm) {
@@ -57,6 +39,33 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     data: {
       user: updatedUser,
     },
+  });
+});
+
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false });
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  const users = await User.find();
+
+  // 3. Send response
+  res.status(200).json({
+    status: 'success',
+    results: users.length,
+    data: {
+      users,
+    },
+  });
+
+  res.status(500).json({
+    status: 'error',
+    message: 'This route is not yet defined',
   });
 });
 
