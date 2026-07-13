@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 const validator = require('validator');
+// const User = require('./userModel');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -70,6 +71,33 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      // MongoDb uses GeoJSON to specify Geo data
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+
+    locations: [
+      {
+        type: {
+          type: String,
+          default: ['Point'],
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
   },
   {
     toJSON: { virtuals: true },
@@ -92,6 +120,13 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
+// Virtual populate
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+
 /**
  * Just like in express, there's also a concept of middlewares in Mongoose.
  * These middleswares can be used to make something happen between two events.
@@ -106,12 +141,18 @@ tourSchema.virtual('durationWeeks').get(function () {
  * -Model middlewares
  */
 
-// Example of pre Document middleware: runs before .save() and .create()
+// Example of pre DOCUMENT MIDDLEWARE runs before .save() and .create()
 // but does not work on .insertMany()
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
+
+// This Document query embedds the user guides data in the tour document.
+// tourSchema.pre('save', async function (next) {
+//   const guidesPromises = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.all(guidesPromises);
+// });
 
 // Example of post Document middleware: runs before .save() and .create()
 // but does not work on .insertMany()
@@ -124,7 +165,7 @@ tourSchema.pre('save', function (next) {
  * The query middleware allows us to excute a function before
  * and after a query is made to the database.
  */
-// Example of the pre Query middleware
+// Example of the pre-save Query middleware
 tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
 
@@ -136,6 +177,15 @@ tourSchema.pre(/^find/, function (next) {
 tourSchema.post(/^find/, function (docs, next) {
   console.log(`query took ${Date.now() - this.start} milliseconds`);
   console.log(docs);
+  next();
+});
+
+// Query middleware to populate the tours documemt with users (guides) reference
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
   next();
 });
 
