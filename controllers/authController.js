@@ -73,8 +73,9 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
-/**This is a middleware function to protect the get allTours
- * route and ensure it can only be accessed by users with login access.
+/*
+ * This is a middleware function to protect the application resources
+ * and restrict certain operations on the app to only the loggedin users
  */
 exports.protect = catchAsync(async (req, res, next) => {
   // 1). Getting the token and check if it exists

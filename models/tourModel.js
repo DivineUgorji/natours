@@ -173,7 +173,7 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
-// Example of the post Query middleware
+// Example of the post Query middleware, this is run after a save to the db
 tourSchema.post(/^find/, function (docs, next) {
   console.log(`query took ${Date.now() - this.start} milliseconds`);
   console.log(docs);
