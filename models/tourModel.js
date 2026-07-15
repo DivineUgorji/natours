@@ -105,6 +105,14 @@ const tourSchema = new mongoose.Schema(
   },
 );
 
+// Setting indexes for improved querying performance
+// single field index
+// tourSchema.index({ price: 1 });
+
+// compound index
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
+
 /**
  * Virtual properties are fields we can define
  * in our schema that won't be persisted (stored in the Db).
