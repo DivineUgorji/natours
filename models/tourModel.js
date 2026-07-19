@@ -113,6 +113,8 @@ const tourSchema = new mongoose.Schema(
 // compound index
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
+// index for our geo-spatial data
+tourSchema.index({ startLocation: '2dsphere' });
 
 /**
  * Virtual properties are fields we can define
@@ -202,10 +204,10 @@ tourSchema.pre(/^find/, function (next) {
  * Aggregation middleware allows us to exscute functions and
  * add hooks before an aggregation happens
  */
-tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  next();
-});
+// tourSchema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//   next();
+// });
 
 /**
  * DATA VALIDATION
